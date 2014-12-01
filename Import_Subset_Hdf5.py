@@ -10,7 +10,8 @@ import h5py
 #hdf5_file_name = '/Users/lwasser/Documents/Conferences/1_DataWorkshop_ESA2014/HDF5File/SJER_140123_chip.h5'
 
 #the "r" is important as it tells python to read in the characters without converting them.
-filePath = (r'F:\D17_Data_2014_Distro\02_SJER\SJER_Spectrometer_Data\2013061320\Reflectance\NIS1_20130613_134931_atmcor.h5')
+#filePath = (r'F:\D17_Data_2014_Distro\02_SJER\SJER_Spectrometer_Data\2013061320\Reflectance\NIS1_20130613_134931_atmcor.h5')
+filePath = (r'/Volumes/My Passport/D17_Data_2014_Distro/02_SJER/SJER_Spectrometer_Data/2013061320/Reflectance/NIS1_20130613_134931_atmcor.h5')
 
 file = h5py.File(filePath, 'r')   # 'r' means that hdf5 file is open in read-only mode
 
@@ -24,10 +25,11 @@ print "Reflectance cropped"
 #https://confluence.slac.stanford.edu/display/PSDM/How+to+access+HDF5+data+from+Python#HowtoaccessHDF5datafromPython-HDF5filestructure
 
 #create SJER Plot Data 
-plots = h5py.File('data\SJERPlots.h5', 'a')   #a is read / write  
+#remember that the slashes are backwards in windows...
+plots = h5py.File('data/SJERPlots.h5', 'a')   #a is read / write  
 #assign the reflectance values to a group
 
-#del plots['plotOne']
+del plots['plotOne']
 plots['plotOne'] = plotReflectance
 
 file.close()
