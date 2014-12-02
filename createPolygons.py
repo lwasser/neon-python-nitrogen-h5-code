@@ -90,3 +90,8 @@ for f in xrange(len(finalLookup)):
     new_feature.Destroy()
 
 new_shape.Destroy()
+
+
+
+#create map in python
+#http://gis.stackexchange.com/questions/61862/simple-thematic-mapping-of-shapefile-using-python

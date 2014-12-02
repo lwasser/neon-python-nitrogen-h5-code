@@ -59,12 +59,21 @@ for f in xrange(len(onlyH5files)):
     xLeft=eastingUL
     xRight=eastingUL+nX*xsize
     
+    #find file centroid
+    yCent=yBot+(nY/2)
+    xCent=xLeft+(nX/2)
+
     #be sure to close the file
     file.close() 
 
     #write out elements into a list
-    fileExtents=[onlyH5files[f],yTop,yBot,xLeft,xRight,mapInfo]  
+    fileExtents=[onlyH5files[f],yTop,yBot,xLeft,xRight,mapInfo,xCent,yCent]  
     finalLookup.append(fileExtents)
 
 #%reset clears all variables
 print("all done!")
+
+
+
+#test plot
+
