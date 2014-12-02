@@ -72,3 +72,37 @@ axes.set_xlim(-180,+180)
 axes.set_ylim(-90,90)
 
 plt.show()
+
+
+
+
+##########
+##########
+
+
+import matplotlib.pyplot as plt
+#from mpl_toolkits.basemap import Basemap
+from matplotlib.patches import Polygon
+import shapefile
+
+
+#s = m.readshapefile('/path/to/shapefiles/Project_Name', 'Project_Name')
+#s = m.readshapefile('data/sjerPlots/','new_shapefile.shp')
+s = shapefile.Reader("data/sjerPlots/new_shapefile.shp")
+
+ 
+for xy, info in zip(m.Project_Name, m.Project_Name_info):
+    if info['Status'] == 'Completed':
+        poly = Polygon(xy, facecolor='red', alpha=0.4)
+        plt.gca().add_patch(poly)
+    elif info['Status'] == 'in progress':
+        poly = Polygon(xy, facecolor='green', alpha=0.4)
+        plt.gca().add_patch(poly)
+    else:
+        print info['Status'] 
+ 
+plt.legend()
+plt.show()
+
+
+

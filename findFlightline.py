@@ -7,7 +7,7 @@ Created on Sun Nov 30 20:13:35 2014
 #import libraries that Python needs to read shapefiles
 import shapefile
 import h5py 
-import numpy
+import numpy as np
 
 #first get the plot coordinate
 
@@ -38,7 +38,9 @@ plotCentroidY=float(records[0][2])
 #i=9
 
 #take a plot and figure out which flightlines the plot is in.
-isInFlightLine=[records[0][0]]
+#isInFlightLine=[records[0][0]]
+isInFlightLine=[]
+
 for i in xrange(len(finalLookup)):
     print(i)
     if ((plotVertices[0] > finalLookup[i][3]) and (plotVertices[2] < finalLookup[i][4])) and ((plotVertices[1] > finalLookup[i][2]) and (plotVertices[3] < finalLookup[i][1])):
@@ -56,8 +58,35 @@ for i in xrange(len(finalLookup)):
         
 #calculate distance         
 #        dist = sqrt( (x2 - x1)**2 + (y2 - y1)**2 )
-        
-                    
+#calculate number of tiles to sort through								
+numOfTiles=(len(isInFlightLine)-1) 
+distanceToTileCenter=[]
+	
+for j in xrange(len(isInFlightLine)):							
+	tileNum=isInFlightLine[j]
+	#find tile center							
+	tileCentroidX = finalLookup[tileNum][6]
+	tileCentroidY = finalLookup[tileNum][7]
+						
+	dist = np.sqrt( (plotCentroidX - tileCentroidX)**2 + (plotCentroidY - tileCentroidY)**2 )							
+	distanceToTileCenter.append(dist)
+	
+np.amin(distanceToTileCenter)
+	
+								
+
+
+#questions to ask greg
+#how do you prepulate a matrix? 
+#matrix vs list
+#how do you look through skipping the first few cells e.g. (2:4)
+#a min on a column of values?
+
+#want to create a matrix
+#PLOTID  value-tile num value - distance from center	
+
+#ask josh - he will have a solution.							
+                   
     
     
 
