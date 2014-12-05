@@ -144,6 +144,22 @@ for i in xrange(len(onePlot)):
     ax.add_patch(locals()["rect"+str(i)])
     #ax.add_patch(matplotlib.patches.Rectangle((onePlot[i][4],onePlot[i][2]), xWidth, yHeight, edgecolor='violet'))
 
+recCen=[[100,400],[140,450],[150,500]]
+plotcent=[170,620]
+dis=[]
+for q in xrange(3):
+	dis.append([abs(plotcent[0]-recCen[q][0]),abs(plotcent[1]-recCen[q][1])])
+	
+	
+#############################
+#use this code to sort out the smallest values...
+dis=[[20, 1], [30, 5], [20, 120]]
+min(dis, key=lambda item: (item[0], item[1]))
+
+dis.index(min(dis, key=lambda item: (item[0], item[1])))
+#############################
+
+
 #add plot boundary
 #bbox saves 4 corners as follows [left X, Lower Y, right X, Upper Y ]
 plotVertices=shapes[0].bbox 
@@ -157,13 +173,17 @@ plt.show()
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
-rect1 = matplotlib.patches.Rectangle((0,0), 200, 800, color='yellow')
-rect2 = matplotlib.patches.Rectangle((100,150), 170, 700, color='red')
-rect3 = matplotlib.patches.Rectangle((50,100), 180, 800, color='#0099FF')
+rect1 = matplotlib.patches.Rectangle((0,0), 200, 800, fill=None, edgecolor='red')
+rect2 = matplotlib.patches.Rectangle((100,150), 180, 750, fill=None, edgecolor='green')
+rect3 = matplotlib.patches.Rectangle((50,100), 200, 800, fill=None, edgecolor='violet')
+plot = matplotlib.patches.Rectangle((150,600), 40, 40, color='blue')
+
 #circle1 = matplotlib.patches.Circle((-200,-250), radius=90, color='#EB70AA')
 ax.add_patch(rect1)
 ax.add_patch(rect2)
 ax.add_patch(rect3)
+ax.add_patch(plot)
+
 #ax.add_patch(circle1)
 plt.xlim([-100, 1000])
 plt.ylim([-100, 1000])
