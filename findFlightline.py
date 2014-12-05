@@ -52,8 +52,8 @@ for j in xrange(len(shapes)):
         print(i)
         if ((plotVertices[0] > finalLookup[i][3]) and (plotVertices[2] < finalLookup[i][4])) and ((plotVertices[1] > finalLookup[i][2]) and (plotVertices[3] < finalLookup[i][1])):
             print("in X and Y bounds")
-            isInTemp.append([i,finalLookup[i][0]])
-            isInFlightLine.append([records[j][0],i,finalLookup[i][0]])
+            isInTemp.append([i,finalLookup[i][0],finalLookup[i][1],finalLookup[i][2],finalLookup[i][3],finalLookup[i][4]])
+            isInFlightLine.append([records[j][0],i,finalLookup[i][0],finalLookup[i][1],finalLookup[i][2],finalLookup[i][3]])
         plotIdDict[records[j][0]]=[isInTemp]
 
 
