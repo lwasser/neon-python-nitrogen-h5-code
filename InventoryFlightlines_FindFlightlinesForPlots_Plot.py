@@ -13,9 +13,15 @@ import shapefile
 
 
 #enter the directory that you wish to explore
+<<<<<<< HEAD
 #external hard drive - mac
 fileDirectory = (r'/Volumes/My Passport/D17_Data_2014_Distro/02_SJER/SJER_Spectrometer_Data/2013061320/Reflectance/')
 #fileDirectory = (r'X:/All_data_distro/D17/SJER/2013/SJER_Spectrometer_Data/2013061320/Reflectance')
+=======
+#fileDirectory = (r'/Volumes/My Passport/D17_Data_2014_Distro/02_SJER/SJER_Spectrometer_Data/2013061320/Reflectance/')
+#fileDirectory = (r'X:/All_data_distro/D17/SJER/2013/SJER_Spectrometer_Data/2013061320/Reflectance')
+fileDirectory = (r'F:/D17_Data_2014_Distro/02_SJER/SJER_Spectrometer_Data/2013061320/Reflectance/')
+>>>>>>> FETCH_HEAD
 
 
 #get a list of all files in the directory
@@ -23,13 +29,15 @@ from os import listdir
 from os.path import isfile, join
 onlyfiles = [ f for f in listdir(fileDirectory) if isfile(join(fileDirectory,f)) ]
 
-#just pull out the files that are h5 files (ignore other extensions)
+#Generate a list of the names of H5 files in the specified directory
 onlyH5files=[]
 for f in onlyfiles:
   if f.endswith(".h5"):
     onlyH5files.append(f)
     
 #should be able to populate this ahead of time with Nan
+#oop through all of the files in the directory, extract flightline bounds and resolution
+#calculate extent in UTM
 finalLookup=[]   
 #for f in onlyH5files:
     #iterate through all H5 files in the directory
@@ -102,15 +110,22 @@ shapes = sf.shapes()
 #read all of the fields in the shapefile
 plotMetadata=sf.fields
 records = sf.records()
+#Create dictionary object that will store final data
 #to access attribute data records[0][2:3]
 plotIdDict={}
 
+<<<<<<< HEAD
 #loop through all plots
 #find the flightlines that completely overlap (intersect) the with the plot boundary
 #note: there could be an intersect command - look into that.
 #for j in xrange(len(shapes)):
 for j in xrange(2):
     
+=======
+#loop through all plots, determine which fligthlines they fall wtihin the boundary of
+#add the flightlines that fall wtihin the boundary of each plot to the dictionary
+for j in xrange(len(shapes)):
+>>>>>>> FETCH_HEAD
     #get the coordinates of the plot boundary
     #bbox saves 4 corners as follows [left X, Lower Y, right X, Upper Y ]
     plotVertices=shapes[j].bbox
@@ -120,8 +135,12 @@ for j in xrange(2):
     
     #finalLookup order 1:Ytop 2:ybottom 3:xLeft  4:xRIGHT
     #loop through all flightlines - figure out which ones contain the plot boundary
+<<<<<<< HEAD
     print(j)
     print(records[j][0])
+=======
+    #if they create the boundary, then store that in the disctionary  
+>>>>>>> FETCH_HEAD
     #plotID
     isInTemp=[]
     for i in xrange(len(finalLookup)):
@@ -260,7 +279,11 @@ print "That's All Folks!"
 
 
 ########################################################################
+<<<<<<< HEAD
 #Plot Flightlines and Field Site  boundary 
+=======
+#plot things
+>>>>>>> FETCH_HEAD
 ########################################################################
 
 import matplotlib
@@ -281,6 +304,7 @@ for i in xrange(len(onePlot)):
     ax.add_patch(locals()["rect"+str(i)])
     #ax.add_patch(matplotlib.patches.Rectangle((onePlot[i][4],onePlot[i][2]), xWidth, yHeight, edgecolor='violet'))
 
+<<<<<<< HEAD
 
 #add plot boundary
 #bbox saves 4 corners as follows [left X, Lower Y, right X, Upper Y ]
@@ -333,6 +357,10 @@ for q in xrange(3):
 # extra code
 ###################################
 
+=======
+###################
+#dummy test code...
+>>>>>>> FETCH_HEAD
 recCen=[[100,400],[140,450],[150,500]]
 plotcent=[170,620]
 dis=[]
