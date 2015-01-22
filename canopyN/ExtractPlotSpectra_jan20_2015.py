@@ -9,12 +9,11 @@ a. metadata
 
 #import libraries that Python needs to read shapefiles
 import h5py 
-import numpy as np
 import shapefile
 
 #set working directory
 import os
-os.chdir('c:/Users/lwasser/Documents/GitHub/adventures-with-python/')
+os.chdir('c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN')
 
 #enter the directory that you wish to explore
 
@@ -29,7 +28,7 @@ onlyH5files=geth5FileList(fileDirectory)
 
 #Build a lookup of key metadata attributes for h5 files
 finalLookup=[]   
-from os.path import isfile, join
+from os.path import join
 #iterate through all H5 files in the  directory and build a list of the
 #filename, extents and mapinfo
 for f in xrange(len(onlyH5files)):
@@ -88,7 +87,7 @@ print("All Files Inventoried - finalLookup Table Created!")
 #plotBoundariesPath=(r'F:\ESA_WorkshopData\WorkingDirectory\Field_SHP_Use\SJERPlotCentroids_Buff_Square.shp')
 #for mac
 #plotBoundariesPath=(r'/Volumes/My Passport/ESA_WorkshopData/WorkingDirectory/Field_SHP_Use/SJERPlotCentroids_Buff_Square.shp')
-plotBoundariesPath=(r'C:/Users/lwasser/Documents/GitHub/adventures-with-python/data/sjerPlots/SJERPlotCentroids_Buff_Square.shp')
+plotBoundariesPath=(r'C:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/sjerPlots/SJERPlotCentroids_Buff_Square.shp')
 
 #read shapefile data
 sf = shapefile.Reader(plotBoundariesPath)
@@ -108,10 +107,11 @@ plotIdDict={}
 
 #create a disctionary of plot boundary coordinates
 plotBound={}
-
+#plotBound contains the key (plot id) and the 4 corners of the plot 
+# bbox saves 4 corners as follows [left X, Lower Y, right X, Upper Y ]
 for j in xrange(len(shapes)):
     #get the coordinates of the plot boundary
-    #bbox saves 4 corners as follows [left X, Lower Y, right X, Upper Y ]
+    
     plotVertices=shapes[j].bbox
     #grab plot centroid coords
     plotCentroidX=float(records[j][3])
@@ -130,15 +130,9 @@ for j in xrange(len(shapes)):
     #for i in xrange(1):	
         print i
         if ((plotVertices[0] > finalLookup[i][3]) and (plotVertices[2] < finalLookup[i][4])) and ((plotVertices[1] > finalLookup[i][2]) and (plotVertices[3] < finalLookup[i][1])):
-            #add the flightline index, the extents of the flightline and the plot centroid to the dict
-            #print(plotVertices[0], 'should be bigger than', finalLookup[i][3])
-            #print(plotVertices[2], 'should be smaller than', finalLookup[i][4])										
-            #print(plotVertices[1], 'should be bigger than', finalLookup[i][2])
-            #print(plotVertices[3], 'should be smaller than', finalLookup[i][1])										
-
+            #add the flightline index, the extents of the flightline and the plot centroid to the dict									
             isInTemp.append([i,finalLookup[i][0],finalLookup[i][1],finalLookup[i][2],finalLookup[i][3],finalLookup[i][4],finalLookup[i][6],finalLookup[i][7]])
-            #would like to figure out how to use the code below but it makes too many lists
-		 #isInTemp.append([i,finalLookup[i][0:4]])
+
 	   #This dictionary contains two lists. the first list is the flightline extents and the centroid (6 numbers)
 	   #the second list is the X,Y lower left hand corner of the plot.		
         plotIdDict[records[j][0]]=[isInTemp,plotVertices]
@@ -197,24 +191,24 @@ for keys in disDict:
     # Grab the lower left corner of the flightline from the original flightline lookup table
     flLowerCorner= [finalLookup[flID][3],finalLookup[flID][1]]
     
-    #i need to grab the plot boundary somewhere
-    
     # Define / Calculate subset reflectance data from the flightline based upon plot boundary			
     SubsetCoordinates=[int(plotBound[keys][0]-flLowerCorner[0]),int(plotBound[keys][2]-flLowerCorner[0]),
                        int(flLowerCorner[1]-plotBound[keys][3]),int(flLowerCorner[1]-plotBound[keys][1])]
 			
         
-    #Define the final slice from the flightline
-    # need to round the above so it's integers instead of floating point.
-    # note that the data are wavelength, columns? rows <<- double check this
-       
+    #Define the final slice from the flightline      
     plotReflectance=reflectance[0:425,SubsetCoordinates[2]:SubsetCoordinates[3],SubsetCoordinates[0]:SubsetCoordinates[1]]   
     
     #grp = hFile.create_group("Reflectance")
     hFile['Reflectance'] = plotReflectance
     file.close()
     hFile.close()
-#quick plot to test that this is working!!
+
+
+
+####################################
+#OPTIONAL - quick plot to test that this is working!!
+#####################################
 
 #turn all of the lists into one list of numbers to plot a histogram of the data.
 import itertools
@@ -240,7 +234,6 @@ plt.imshow(plotReflectance)
 	#del plotData[groupName]
     #plotData[groupName] = plotReflectance_Sub
     #newdict[groupName]	= plotReflectance_Sub
-    
     
 
 print "That's All Folks!"
