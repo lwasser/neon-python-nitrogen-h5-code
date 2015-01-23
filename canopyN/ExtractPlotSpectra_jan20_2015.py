@@ -84,7 +84,6 @@ print("All Files Inventoried - finalLookup Table Created!")
 
 #first get the plot coordinate
 
-#plotBoundariesPath=(r'F:\ESA_WorkshopData\WorkingDirectory\Field_SHP_Use\SJERPlotCentroids_Buff_Square.shp')
 #for mac
 #plotBoundariesPath=(r'/Volumes/My Passport/ESA_WorkshopData/WorkingDirectory/Field_SHP_Use/SJERPlotCentroids_Buff_Square.shp')
 plotBoundariesPath=(r'C:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/sjerPlots/SJERPlotCentroids_Buff_Square.shp')
@@ -97,7 +96,6 @@ shapes = sf.shapes()
 plotMetadata=sf.fields
 records = sf.records()
 #Create dictionary object that will store final data
-#to access attribute data records[0][2:3]
 plotIdDict={}
 
 

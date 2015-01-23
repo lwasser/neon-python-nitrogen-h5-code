@@ -12,14 +12,27 @@ def findBrightPixels(spectra,NDVIBool):
     NDVI boolean where true = values > NDVI threshold
     Outputs: an array of the spectra for the areas of NDVI brightest values
     '''
-    brightPixels=[]
+    fnBrightPixels=[]
     for band in range(len(spectra)):   
         tmpBrightPixels=[]
         #extra a bands worth of data
         data=spectra[band]
         #select pixels in the band where NDVI > threshold
         tmpBrightPixels = data[NDVIBool]
-        brightPixels.append=tmpBrightPixels
-        
-    return brightPixels
+        fnBrightPixels.append(tmpBrightPixels)
+        print band
+    return fnBrightPixels
+           
+           
+#reflectance,brightestBool  
+           
+
+#fnBrightPixels=[]
+#for band in range(len(reflectance)):   
+#    tmpBrightPixels=[]
+    #extra a bands worth of data
+#    data=reflectance[band]
+    #select pixels in the band where NDVI > threshold
+#    tmpBrightPixels = data[brightestBool]
+#    fnBrightPixels.append(tmpBrightPixels)
         

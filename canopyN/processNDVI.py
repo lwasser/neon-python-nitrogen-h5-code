@@ -35,9 +35,18 @@ def processNDVI(spectra,redBand=52,NIRband=96):
     
 from extractBrightestPixels import findBrightPixels
 
+#########################
+# clean out directory of tifs
+#########################
+
+#from cleanOutDir import cleanOutDir
+#first clear out the H5 directory
+#cleanOutDir('c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/NDVItiff/*.tif')
+
 NDVIdict={}   
-brightPixels={}
+brightPixels=[]
 for file in H5files:
+    brightPixels=[]
     filePath =(dirPath + file) 
     #open the h5 file     
     H5file = h5py.File(filePath, 'r')   # 'r' means that hdf5 file is open in read-only mode
@@ -55,9 +64,19 @@ for file in H5files:
     writeGeotiff(filename,ndviOut,plotBound[plot][0],plotBound[plot][3])
     #create dictionary of NDVI values for kicks
     NDVIdict[plot]=ndviOut
-    brightest=ndviOut>.5
+    brightestBool=ndviOut>.5
     #lastly, extract brightest pixels
-    brightPixels[plot]=findBrightPixels(ndviOut,brightest)
+    brightPixels=findBrightPixels(reflectance,brightestBool)
+    
+    #create H5 output
+    #create empty H5 File - this is where all of the plot data will be stored
+    hFile = h5py.File('data/brightPixelsH5/' + plot + '.h5', 'a')  
+    #grp = hFile.create_group("Reflectance")
+    hFile['Reflectance'] = plotReflectance
+    file.close()
+    hFile.close()
+    
+    #close all files
     H5file.close()
     
 ################################
