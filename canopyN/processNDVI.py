@@ -33,9 +33,10 @@ def processNDVI(spectra,redBand=52,NIRband=96):
 #def getReflectanceData(file):
 #    filePath =(dirPath + file)    
     
+from extractBrightestPixels import findBrightPixels
 
 NDVIdict={}   
-
+brightPixels={}
 for file in H5files:
     filePath =(dirPath + file) 
     #open the h5 file     
@@ -49,10 +50,14 @@ for file in H5files:
     if file.endswith('.h5'):
       plot = file[:-3]
     print plot
-    #write the NDVI out as a raster
+    #write the NDVI out as a geotif!
     filename=('NDVItiff/' + plot + '.tif' )
     writeGeotiff(filename,ndviOut,plotBound[plot][0],plotBound[plot][3])
+    #create dictionary of NDVI values for kicks
     NDVIdict[plot]=ndviOut
+    brightest=ndviOut>.5
+    #lastly, extract brightest pixels
+    brightPixels[plot]=findBrightPixels(ndviOut,brightest)
     H5file.close()
     
 ################################
@@ -61,10 +66,12 @@ for file in H5files:
 ################################
 for file in H5files:
     filePath =(dirPath + file) 
+    if file.endswith('.h5'):
+      plot = file[:-3]
     #open the h5 file     
     H5file = h5py.File(filePath, 'r')   # 'r' means that hdf5 file is open in read-only mode
 
-    if 
+    brightPixels= NDVIdict[plot] >.5 
     
     #close the file    
     H5file.close()

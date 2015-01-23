@@ -170,7 +170,12 @@ print("Done Inventoring Data & Identifying Needed Flightlines!")
 
 ###################################
 
+from cleanOutDir import cleanOutDir
+#first clear out the H5 directory
+cleanOutDir('c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/h5/*')
+
 for keys in disDict:
+    
 #for char in 'a':
     print(keys)
     #create empty H5 File - this is where all of the plot data will be stored
@@ -195,9 +200,9 @@ for keys in disDict:
     SubsetCoordinates=[int(plotBound[keys][0]-flLowerCorner[0]),int(plotBound[keys][2]-flLowerCorner[0]),
                        int(flLowerCorner[1]-plotBound[keys][3]),int(flLowerCorner[1]-plotBound[keys][1])]
 			
-        
+    numBands=len(reflectance)
     #Define the final slice from the flightline      
-    plotReflectance=reflectance[0:425,SubsetCoordinates[2]:SubsetCoordinates[3],SubsetCoordinates[0]:SubsetCoordinates[1]]   
+    plotReflectance=reflectance[0:numBands,SubsetCoordinates[2]:SubsetCoordinates[3],SubsetCoordinates[0]:SubsetCoordinates[1]]   
     
     #grp = hFile.create_group("Reflectance")
     hFile['Reflectance'] = plotReflectance
