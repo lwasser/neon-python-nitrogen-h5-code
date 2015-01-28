@@ -5,15 +5,25 @@ This code will run through a directory of H5 files and will extract
 a. metadata
 @author: lwasser
 """
+###############################################
+#Import Required Functions
+###############################################
 
-
-#import libraries that Python needs to read shapefiles
 import h5py 
 import shapefile
+import numpy as np
+
+from writeGeotiff import writeGeotiff
 
 #set working directory
 import os
 os.chdir('c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN')
+
+#define the following paths
+#the path where the h5 files will be stored
+plotH5FilePath='c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/h5/'
+plotH5_BrightPixPath='c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/brightPixelsH5/'
+#the path where the best pixels to be used in analysis will be stored
 
 #enter the directory that you wish to explore
 
@@ -169,20 +179,15 @@ print("Done Inventoring Data & Identifying Needed Flightlines!")
 ###################################
 
 from cleanOutDir import cleanOutDir
-#first clear out the H5 directory
-cleanOutDir('c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/h5/*')
 
-for keys in disDict:
-    
-#for char in 'a':
+#first clear out the H5 directory
+cleanOutDir(plotH5FilePath + '*')
+
+for keys in disDict: 
     print(keys)
     #create empty H5 File - this is where all of the plot data will be stored
     hFile = h5py.File('data/h5/' + keys + '.h5', 'a')  
     #get the flightline that needs to be subsetted
-    
-    #filePath = (r'/Volumes/My Passport/D17_Data_2014_Distro/02_SJER/SJER_Spectrometer_Data/2013061320/Reflectance/' 
-    #			+ disDict[keys][1])
-
     filePath =(fileDirectory + disDict[keys][1])    
     file = h5py.File(filePath, 'r')   # 'r' means that hdf5 file is open in read-only mode
 
@@ -206,6 +211,107 @@ for keys in disDict:
     hFile['Reflectance'] = plotReflectance
     file.close()
     hFile.close()
+
+#create list of plot level H5 files
+plotH5files=geth5FileList(plotH5FilePath)
+
+################### part 3 ####################################
+#run through each file, process NDVI, determine brightest pixels
+#create H5 file per plot of bright pixels (for final processing)
+
+#cleanout h5 files with brightest pixels
+###############################################################
+
+
+##########################3
+#process NDVI
+#
+#########################
+
+#clear out the bright pixels H5 directory
+cleanOutDir(plotH5_BrightPixPath+'*')
+
+from processNDVI import processNDVI
+from extractBrightestPixels import findBrightPixels
+
+NDVIdict={}   
+brightPixels=[]
+for file in plotH5files:
+    brightPixels=[]
+    filePath =(plotH5FilePath + file) 
+    #open the h5 file     
+    H5file = h5py.File(filePath, 'r')   # 'r' means that hdf5 file is open in read-only mode
+    
+    #Select the reflectance dataset within the flightline 
+    reflectance=H5file['/Reflectance']
+    
+    ndviOut=processNDVI(reflectance)
+    #get plot name
+    if file.endswith('.h5'):
+      plot = file[:-3]
+    print plot
+    #write the NDVI out as a geotif!
+    filename=('NDVItiff/' + plot + '.tif' )
+    writeGeotiff(filename,ndviOut,plotBound[plot][0],plotBound[plot][3])
+    #create dictionary of NDVI values for kicks
+    NDVIdict[plot]=ndviOut
+    brightestBool=ndviOut>.6
+    #lastly, extract brightest pixels
+    brightPixels=findBrightPixels(reflectance,brightestBool)
+    
+    #create H5 file that will store the plot level spectra (brightest pixels)
+    hFile = h5py.File('data/brightPixelsH5/bri' + plot + '.h5', 'a')  
+    #grp = hFile.create_group("Reflectance")
+    hFile['Reflectance'] = brightPixels
+    H5file.close()
+    hFile.close()
+    
+
+#np.sum(array) use this to count the number of true responses in an array
+
+############################
+#the next chunk of code will process canopy N using NDNI
+#(and whatever other calcs we want to use)
+###########################
+
+#Calculate NDNI on just the brightest pixels
+#NDNI = [log(1/R1510)-log (1/R1680)] / [log (1/R1510) + log (1/R1680)])
+
+#create list of plot level H5 files
+briPixH5Path = 'c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/brightPixelsH5/'
+
+briPixH5Files=geth5FileList(briPixH5Path)
+import math
+
+for file in briPixH5Files:
+    
+    filePath =(briPixH5Path + file) 
+    #open the h5 file     
+    H5file = h5py.File(filePath, 'r')   # 'r' means that hdf5 file is open in read-only mode
+    
+    #Select the reflectance dataset within the flightline 
+    reflectance=H5file['/Reflectance']
+    b1=(reflectance[224,:]).astype('float')
+    b2=(reflectance[258,:]).astype('float')
+    NDNI=(np.log(b1)-np.log(b2)) / ((np.log(b1)+np.log(b2)))
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
