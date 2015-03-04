@@ -8,6 +8,9 @@ a. metadata
 ###############################################
 #Import Required Functions
 ###############################################
+#set working directory
+import os
+os.chdir('c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN')
 
 import h5py 
 import shapefile
@@ -15,30 +18,33 @@ import numpy as np
 
 from writeGeotiff import writeGeotiff
 
-#set working directory
-import os
-os.chdir('c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN')
+from getFileList import geth5FileList
+from os.path import join
 
-#define the following paths
+#DEFINE PATHS
 #the path where the h5 files will be stored
 plotH5FilePath='c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/h5/'
+
+#The path where the best pixels to be used in analysis will be stored
 plotH5_BrightPixPath='c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/brightPixelsH5/'
-#the path where the best pixels to be used in analysis will be stored
+
+#NDVI tiff folder
+NDVItiffpath = 'c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/NDVItiff/'
 
 #enter the directory that you wish to explore
 
 #external hard drive - mac
 #fileDirectory = (r'/Volumes/My Passport/D17_Data_2014_Distro/02_SJER/SJER_Spectrometer_Data/2013061320/Reflectance/')
 #fileDirectory = (r'X:/All_data_distro/D17/SJER/2013/SJER_Spectrometer_Data/2013061320/Reflectance')
-fileDirectory = (r'F:/D17_Data_2014_Distro/02_SJER/SJER_Spectrometer_Data/2013061320/Reflectance/')
+fileDirectory = (r'G:/D17_Data_2014_Distro/02_SJER/SJER_Spectrometer_Data/2013061320/Reflectance/')
 
 #get a list of all files in the directory
-from getFileList import geth5FileList
+
+
 onlyH5files=geth5FileList(fileDirectory)
 
 #Build a lookup of key metadata attributes for h5 files
 finalLookup=[]   
-from os.path import join
 #iterate through all H5 files in the  directory and build a list of the
 #filename, extents and mapinfo
 for f in xrange(len(onlyH5files)):
@@ -128,9 +134,6 @@ for j in xrange(len(shapes)):
     #finalLookup order 1:Ytop 2:ybottom 3:xLeft  4:xRIGHT
     #loop through all flightlines - figure out which ones contain the plot boundary
 
-    print(j)
-    print(records[j][0])
-
     #if they create the boundary, then store that in the disctionary  
     #plotID
     isInTemp=[]
@@ -147,19 +150,20 @@ for j in xrange(len(shapes)):
         plotBound[records[j][0]]=plotVertices     
 
 								
-print('plotIdDict is working properly')							
+print('plotIdDict - A dictionary of h5 files for each plot is created')							
 
 
 plotNamesList=plotIdDict.keys()
 
 #loop through each plot and find the best flightline (closest to the center)
 #this code doesn't work properly so i'm bypassing it for the time being
-#with a manual approach. to be reassessed later.
+#with a manual approach (created a text file with the best flightline for each plot
+# this to be reassessed later. when the data are mosaicked this will be less of an issue
 
-###
+####################################
 #import table of best flightlines
 
-###
+###################################
 
 import csv
 f = open('inputs/SJERTiles.txt')
@@ -174,7 +178,8 @@ print("Done Inventoring Data & Identifying Needed Flightlines!")
 
 
 ####################################
-#Finally, extract subset from spectrometer data!
+#Extract spatial subset from spectrometer data
+#one subset for each plot
 
 ###################################
 
@@ -183,8 +188,8 @@ from cleanOutDir import cleanOutDir
 #first clear out the H5 directory
 cleanOutDir(plotH5FilePath + '*')
 
+#create H5 file with spectra for each plot - named with the plot name
 for keys in disDict: 
-    print(keys)
     #create empty H5 File - this is where all of the plot data will be stored
     hFile = h5py.File('data/h5/' + keys + '.h5', 'a')  
     #get the flightline that needs to be subsetted
@@ -225,17 +230,22 @@ plotH5files=geth5FileList(plotH5FilePath)
 
 ##########################3
 #process NDVI
-#
 #########################
 
 #clear out the bright pixels H5 directory
 cleanOutDir(plotH5_BrightPixPath+'*')
+#clear out the NDVI geotiff folder
+cleanOutDir(NDVItiffpath+'*')
 
+
+# functions i created to calculate NDVI for each plot and extract
+#only pixels that are "bright" (healthier veg)
 from processNDVI import processNDVI
 from extractBrightestPixels import findBrightPixels
 
 NDVIdict={}   
 brightPixels=[]
+
 for file in plotH5files:
     brightPixels=[]
     filePath =(plotH5FilePath + file) 
@@ -245,19 +255,53 @@ for file in plotH5files:
     #Select the reflectance dataset within the flightline 
     reflectance=H5file['/Reflectance']
     
+    #default NDVI bands redBand=53,NIRband=95, redEnd=57, NIRend=99
     ndviOut=processNDVI(reflectance)
     #get plot name
     if file.endswith('.h5'):
       plot = file[:-3]
-    print plot
+    #print plot
     #write the NDVI out as a geotif!
     filename=('NDVItiff/' + plot + '.tif' )
     writeGeotiff(filename,ndviOut,plotBound[plot][0],plotBound[plot][3])
     #create dictionary of NDVI values for kicks
+    
+    #NOTE: this is problematic now because of low NDVI values in some plots (senescent grass)
+    #- might need to look at the lidar as well for this
     NDVIdict[plot]=ndviOut
     brightestBool=ndviOut>.6
+    
+    #check to see how many bright pixels are in the tiff
+    print plot, 'brightpixels: ', (np.count_nonzero(brightestBool))
+
+    #delete testing1=reflectance    
+    #to save code, simply apply all non  bright pixels (boolean= false) to -999  
+    #not sure how to do the above gracefully  
+    #delete testing=reflectance[:,:,brightestBool] = -999
+    
     #lastly, extract brightest pixels
     brightPixels=findBrightPixels(reflectance,brightestBool)
+    
+    ########## export CSV for convolution    ###########
+    #transpose array so each band is a column
+    tranBPixels = np.transpose(brightPixels)
+    
+    a=len(tranBPixels[1])-1
+    
+    #insert the plot numbers in the first column
+    tranBPixels=np.insert(tranBPixels, 0, int(plot[4:]), axis=1)
+
+    try:
+        finalSpectra #does finalSpectra exist?    
+    except NameError:
+        finalSpectra=tranBPixels #create array
+    else:
+        finalSpectra=np.concatenate((finalSpectra,tranBPixels)) #add to array
+    #clear out tranBPixels
+    del tranBPixels
+    
+
+    ########### end export CSV for convolution ###########
     
     #create H5 file that will store the plot level spectra (brightest pixels)
     hFile = h5py.File('data/brightPixelsH5/bri' + plot + '.h5', 'a')  
@@ -265,7 +309,12 @@ for file in plotH5files:
     hFile['Reflectance'] = brightPixels
     H5file.close()
     hFile.close()
-    
+ 
+name=plot[:4]+'spectra.csv'
+
+#export csv
+np.savetxt(name, finalSpectra, delimiter=",",fmt='%1.5d')
+
 
 #np.sum(array) use this to count the number of true responses in an array
 
@@ -281,10 +330,11 @@ for file in plotH5files:
 briPixH5Path = 'c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/brightPixelsH5/'
 
 briPixH5Files=geth5FileList(briPixH5Path)
-import math
+NDNI={}
 
 for file in briPixH5Files:
-    
+    plotName = file[3:-3]
+    print plotName
     filePath =(briPixH5Path + file) 
     #open the h5 file     
     H5file = h5py.File(filePath, 'r')   # 'r' means that hdf5 file is open in read-only mode
@@ -293,7 +343,7 @@ for file in briPixH5Files:
     reflectance=H5file['/Reflectance']
     b1=(reflectance[224,:]).astype('float')
     b2=(reflectance[258,:]).astype('float')
-    NDNI=(np.log(b1)-np.log(b2)) / ((np.log(b1)+np.log(b2)))
+    NDNI[plotName]=((1/np.log(b1))-(1/np.log(b2))) / ((1/np.log(b1))+(1/np.log(b2)))
 
     
 
@@ -325,7 +375,7 @@ list2d = plotReflectance
 merged = list(itertools.chain.from_iterable(list2d))
 
 
-import pyplot as plt
+from matplotlib import pyplot as plt
 plt.hist(merged)
 plt.title("Histogram")
 plt.xlabel("Reflectance")
