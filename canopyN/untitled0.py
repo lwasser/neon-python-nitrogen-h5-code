@@ -21,3 +21,11 @@ else:
     
     a = np.array([[1, 1], [2, 2], [3, 3]])
     np.insert(a, 0, 5, axis=1)
+
+
+if 'RIRO' in currentChemData.keys():
+    print 'its there'
+else:
+    print 'not there'
+    
+    

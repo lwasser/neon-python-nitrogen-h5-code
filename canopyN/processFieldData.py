@@ -53,63 +53,115 @@ byPlot_Taxon['dbh'].describe()
 #sum DBH by plot and then taxon
 dbhTaxon = byPlot_Taxon['dbh'].sum()
 
+
+############################## Process the Chem Data #######################
+
+#select rows from the site of interest
+#siteOnly=dfChem[dfChem.site_id == site]
+
+#create new dataframe from split cells
+d2=pd.DataFrame(dfChem.unique_ID.str.split('-').tolist(), columns="siteNum stemId".split())
+#append new columns to siteOnly dataframe
+dfChem['siteNum'],dfChem['stemId']=(dfChem['site_id']+d2['siteNum']),d2['stemId']
+
+#just grab the fields that i need.
+plotChemDF=pd.concat([dfChem['siteNum'], dfChem['totalN'],dfChem['species_code'],dfChem['stemId']],axis=1)
+#view the first 5 lines of the DF
+plotChemDF.head()
+
+#group by plot and then taxon
+chemByPlot_Taxon = plotChemDF.groupby(['siteNum', 'species_code'])
+#byPlot_Taxon['dbh'].describe() - to write things out
+#grab mean totalN value by taxon per plot
+nPlotTaxon = chemByPlot_Taxon['totalN'].mean()
+
+
+################################
+
 #create a class to store variables of interest
 class plotData:
     """a class to store plot data """
-    def __init__(self, plotid="", species="", dbh= 0, pctDBH=0):
+    def __init__(self, plotid="", species="", dbh= 0, pctDBH=0, pctN=float('NaN')):
         pass
     #write out as string
     def __str__(self):
         return self.plotid + "," + self.dbh
         
-    
+#create a class to store variables of interest
+class plotChemData:
+    """a class to store plot data """
+    def __init__(self, plotid="", species="", pctN= 0, pctDBH=0):
+        pass
+    #write out as string
+    def __str__(self):
+        return self.plotid + "," + self.dbh 
 
 #create dataframe from series
-#loop through each plot name and create the data frame
+#loop through each plot name and create the data frame that contains structure
+#data for that plot
 plotList =[]
 for plot in plots:
+    n=999
     totalDBH=plotDBH[plot]   
     currentData=dbhTaxon[plot]
+    #not all plots have chem data, check to make sure there is plot data here
+    if plot in nPlotTaxon.keys():
+        currentChemData=nPlotTaxon[plot]
+    else:
+        print 'missing chem data for plot ' + plot
+        n=0
+        
  
     
     #get list of taxon in plot    
     #a=dbhTaxon[plot].keys()
     
-    for species in currentData.keys():
+    for aSpecies in currentData.keys():
         #call class
         d=plotData()
         d.plotid = plot
-        d.dbh = currentData[species]
-        d.species = species
-        d.pctDBH = currentData[species] / totalDBH
-        list=[plot[0:4],d.plotid,d.species,d.dbh,d.pctDBH]
+        d.dbh = currentData[aSpecies]
+        d.species = aSpecies
+        d.pctDBH = currentData[aSpecies] / totalDBH
+        #if there's no plot chem data, then set pctN to NaN
+        if n==0:
+            d.pctN = float('NaN')
+        else:    
+            #not all species were sampled for N, make sure that this plot has N data for a given species
+            if aSpecies in currentChemData.keys():
+                d.pctN = currentChemData[aSpecies]
+            else:
+                d.pctN = float('NaN')
+        
+        list=[plot[0:4],d.plotid,d.species,d.dbh,d.pctDBH, d.pctN]
         plotList.append(list)
-
-finDFStr = pd.DataFrame(plotList, columns=["site","plotid","species","totDBH","pctDBH"])
+#right now this isn't returning ALL entries... should be 1593
+finDFStr = pd.DataFrame(plotList, columns=["site","plotid","species","totDBH","pctDBH","pctN"])
 
 #make sure things add to 1
 checkPct = finDFStr.groupby(['plotid'])
 finalcheck=checkPct['pctDBH'].sum()
 finalcheck
 
-#select rows from the site of interest
-siteOnly=dfChem[dfChem.site_id == site]
 
-#create new dataframe from split cells
-d2=pd.DataFrame(siteOnly.unique_ID.str.split('-').tolist(), columns="siteNum stemId".split())
-#append new columns to siteOnly dataframe
-siteOnly['siteNum'],siteOnly['stemId']=(site+d2['siteNum']),d2['stemId']
 
-#just grab the fields that i need.
-newDF=pd.concat([siteOnly['siteNum'], siteOnly['totalN'],siteOnly['species_code'],siteOnly['stemId']],axis=1)
-#view the first 5 lines of the DF
-newDF.head()
+# finDFStr - this is the structure DF and plotChemDF is the chem structure DF
+
+#get unique species available in the chem data
+species=np.unique(plotChemDF.species_code.ravel())
+#select just the rows in each plot where there is chem data
+chemDataAvail=finDFStr[finDFStr.species.isin(species)]
 
 #clear additional dataframe
 del d2
 
 #get unique site names
 a=np.unique(siteOnly.siteNum.ravel())
+
+#calculate species level average N
+for plots in a:
+    plotDf=siteOnly[siteOnly.siteNum == plots]
+    
 
 #calculate average N per plot
 avN={}
@@ -140,7 +192,7 @@ plt.plot(x, y, '.')
 plt.plot(x, m*x + b, '-')
 plt.ylabel('Plot Av Measured Total N',fontsize=15)
 plt.xlabel('Plot Av NDNI',fontsize=15)
-plt.title('This aint pretty but it aint ugly either', fontsize=20)
+plt.title('NDNI vs In Situ Leaf Level Canopy N', fontsize=20)
 plt.xlim(0.025,.032)
 plt.ylim(1,2.3)
 plt.text(.03, 2.2, r'y=' + str(round(m,2)) + 'x+' + str(round(b,2)))

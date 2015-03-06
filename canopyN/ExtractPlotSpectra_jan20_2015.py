@@ -347,7 +347,7 @@ for file in briPixH5Files:
 
     
 
-
+print ("NDNI calculated")
 
 
 
