@@ -11,12 +11,14 @@ import os
 #conda install gdal provides the above libraries.
 os.chdir('c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/')
 
-def writeGeotiff (dst_filename,array,upperLeftx,upperLeftY,ncol=40,nrow=40):
+def writeGeotiff (dst_filename,array,upperLeftx,upperLeftY,EPSG=32611,ncol=40,nrow=40):
         '''Create raster from array. This needs to be followed by gdal_translate command to set null value 
         (I cannot get dataset.SetNoDataValue() to work)
         Inputs Raster??
         dst_filename: string wtih the file name output you want
         array: the input array to be converted
+        EPSG (coordinate reference system)
+        upper left x, upperLeftY
         ncol, nrow (defaults to 40)
         '''
         #driver = raster.GetDriver()
@@ -40,7 +42,7 @@ def writeGeotiff (dst_filename,array,upperLeftx,upperLeftY,ncol=40,nrow=40):
         0, -PIXEL_SIZE))   
         
         srs = osr.SpatialReference()
-        srs.ImportFromEPSG(32611) #UTM zone 11N
+        srs.ImportFromEPSG(EPSG) #defaults to UTM zone 11N
         
         dst_ds.SetProjection( srs.ExportToWkt() )
         dst_ds.GetRasterBand(1).WriteArray(array)

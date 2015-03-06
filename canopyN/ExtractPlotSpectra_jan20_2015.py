@@ -17,29 +17,42 @@ import shapefile
 import numpy as np
 
 from writeGeotiff import writeGeotiff
-
+from clipRaster_CHM import clipRaster
 from getFileList import geth5FileList
 from os.path import join
+from pandas import read_csv
+from derivePlotBoundary import derivePlotBoundary
 
-#DEFINE PATHS
+########################## DEFINE PATHS #################################
+#########################################################################
+
+basePath='c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN'
 #the path where the h5 files will be stored
-plotH5FilePath='c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/h5/'
+plotH5FilePath=basePath+ '/data/h5/'
 
 #The path where the best pixels to be used in analysis will be stored
-plotH5_BrightPixPath='c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/brightPixelsH5/'
-
+plotH5_BrightPixPath=basePath+'/data/brightPixelsH5/'
 #NDVI tiff folder
-NDVItiffpath = 'c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/NDVItiff/'
-
-#enter the directory that you wish to explore
+NDVItiffpath = basePath+'/data/ndviTiff/'
+#CHM tiff folder
+CHMtiffpath = basePath+'/data/chmTiff/'
 
 #external hard drive - mac
 #fileDirectory = (r'/Volumes/My Passport/D17_Data_2014_Distro/02_SJER/SJER_Spectrometer_Data/2013061320/Reflectance/')
 #fileDirectory = (r'X:/All_data_distro/D17/SJER/2013/SJER_Spectrometer_Data/2013061320/Reflectance')
 fileDirectory = (r'G:/D17_Data_2014_Distro/02_SJER/SJER_Spectrometer_Data/2013061320/Reflectance/')
 
-#get a list of all files in the directory
+xyPlotLoc  = basePath+ '/fieldData/SJERPlotCentroids.csv'
 
+##########################  #################################
+#########################################################################
+
+
+
+########################## INVENTORY H5 Files #################################
+#########################################################################
+
+#get a list of all files in the directory
 
 onlyH5files=geth5FileList(fileDirectory)
 
@@ -92,40 +105,64 @@ for f in xrange(len(onlyH5files)):
 print("All Files Inventoried - finalLookup Table Created!")
 
 
-
-
-###########################################################################
-# PART TWO -- Find flightlines for each plot
-###########################################################################
+########################## Generate Plot Boundaries #########################
+#############################################################################
 
 #first get the plot coordinate
 
 #for mac
 #plotBoundariesPath=(r'/Volumes/My Passport/ESA_WorkshopData/WorkingDirectory/Field_SHP_Use/SJERPlotCentroids_Buff_Square.shp')
-plotBoundariesPath=(r'C:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/sjerPlots/SJERPlotCentroids_Buff_Square.shp')
+#plotBoundariesPath=(r'C:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/sjerPlots/SJERPlotCentroids_Buff_Square.shp')
 
+#import text file with plot name and x,y centroid.
+
+
+p = open(xyPlotLoc)
+dfPlotLoc = read_csv(p, header=0)
+
+#get plot boundaries for each centroid
+
+#code to select a row from a DF: dfPlotLoc[dfPlotLoc.Plot_ID == 'SJER1068']
 #read shapefile data
-sf = shapefile.Reader(plotBoundariesPath)
-shapes = sf.shapes()
+#sf = shapefile.Reader(plotBoundariesPath)
+#shapes = sf.shapes()
+
+#create plot boundary dictionary
+plotBound={}
+plotCorners=[]
+for index, row in dfPlotLoc.iterrows():
+    xy= [row['easting'],row['northing']]
+    plotCorners = derivePlotBoundary(xy[0], xy[1], 40, 40)
+    #need to make sure the plotBoundary 
+    #xy is a list of coordinates leftx, rightx, topy, bottomy
+    plotBound[row['Plot_ID']]=[plotCorners,xy]
 
 #read all of the fields in the shapefile
-plotMetadata=sf.fields
-records = sf.records()
+#plotMetadata=sf.fields
+#records = sf.records()
 #Create dictionary object that will store final data
-plotIdDict={}
+
+
+###########################################################################
+#  Find flightlines for each plot
+###########################################################################
+
+#this should be redone to simply accept a csv with plot XY values.
 
 
 #loop through all plots
 #find the flightlines that completely overlap (intersect) the with the plot boundary
 #note: there could be an intersect command - look into that.
-
-#create a disctionary of plot boundary coordinates
+plotIdDict={}
+#create a disctionary of plot boundary coordinates and the plot centroid (index1)
 plotBound={}
+
 #plotBound contains the key (plot id) and the 4 corners of the plot 
 # bbox saves 4 corners as follows [left X, Lower Y, right X, Upper Y ]
 for j in xrange(len(shapes)):
     #get the coordinates of the plot boundary
     
+
     plotVertices=shapes[j].bbox
     #grab plot centroid coords
     plotCentroidX=float(records[j][3])
@@ -147,7 +184,7 @@ for j in xrange(len(shapes)):
 	   #This dictionary contains two lists. the first list is the flightline extents and the centroid (6 numbers)
 	   #the second list is the X,Y lower left hand corner of the plot.		
         plotIdDict[records[j][0]]=[isInTemp,plotVertices]
-        plotBound[records[j][0]]=plotVertices     
+        plotBound[records[j][0]]=[plotVertices,[plotCentroidX, plotCentroidY]]
 
 								
 print('plotIdDict - A dictionary of h5 files for each plot is created')							
@@ -255,15 +292,19 @@ for file in plotH5files:
     #Select the reflectance dataset within the flightline 
     reflectance=H5file['/Reflectance']
     
-    #default NDVI bands redBand=53,NIRband=95, redEnd=57, NIRend=99
-    ndviOut=processNDVI(reflectance)
     #get plot name
     if file.endswith('.h5'):
       plot = file[:-3]
-    #print plot
-    #write the NDVI out as a geotif!
-    filename=('NDVItiff/' + plot + '.tif' )
-    writeGeotiff(filename,ndviOut,plotBound[plot][0],plotBound[plot][3])
+      
+    #default NDVI bands redBand=53,NIRband=95, redEnd=57, NIRend=99
+    ndviOut=processNDVI(reflectance)   
+    
+    #write the NDVI out as a geotif
+    filenameNDVI=('NDVItiff/' + plot + '.tif' )
+    writeGeotiff(filenameNDVI,ndviOut,plotBound[plot][0],plotBound[plot][3])
+
+
+    
     #create dictionary of NDVI values for kicks
     
     #NOTE: this is problematic now because of low NDVI values in some plots (senescent grass)
@@ -315,6 +356,28 @@ name=plot[:4]+'spectra.csv'
 #export csv
 np.savetxt(name, finalSpectra, delimiter=",",fmt='%1.5d')
 
+
+##################### CLIP CHM to Study Region ##############################
+#############################################################################
+clippedCHM={}
+
+for plot in plotNamesList:    
+    #import chm
+    CHM= (r'G:/D17_Data_2014_Distro/02_SJER/SJER_LiDAR_Data/CHM/r_filtered_CHM_pit_free.tif')  
+    
+    #clipRaster(inputRaster,clipExtent)
+    #[leftx, rightx, topy, bottomy]
+    #plotvertices is saved as : [left X, Lower Y, right X, Upper Y ]
+    extent=[ plotBound[plot][0][0],plotBound[plot][0][2],plotBound[plot][0][3],plotBound[plot][0][1]]
+    #return an array representing the clipped CHM
+    clippedCHM[plot]=clipRaster(CHM,extent)
+     
+    #write the CHM out as a geotif
+    filenameCHM=('chmTiff/' + plot + 'chm.tif' )
+    writeGeotiff(filenameCHM,clippedCHM[plot],plotBound[plot][0][0],plotBound[plot][0][3],EPSG=32611)
+
+####################### END CLIP CHM #######################################
+############################################################################
 
 #np.sum(array) use this to count the number of true responses in an array
 
