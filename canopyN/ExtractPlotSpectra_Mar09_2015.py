@@ -59,7 +59,6 @@ CHMtiffpath = basePath+'/data/chmTiff/'
 
 xyPlotLoc  = basePath+ '/fieldData/SJERPlotCentroids.csv'
 
-##########################  #################################
 #########################################################################
 
 
@@ -75,10 +74,13 @@ onlyH5files=geth5FileList(fileDirectory)
 finalLookup=[]   
 #iterate through all H5 files in the  directory and build a list of the
 #filename, extents and mapinfo
-for f in xrange(len(onlyH5files)):
+
+#for f in xrange(len(onlyH5files)):
+for f in onlyH5files:    
     #open the file name to the directory path so the code knows where to find
     #the hdf5 file to open.
-    filePath=join(fileDirectory,onlyH5files[f])
+    filePath=join(fileDirectory,f)
+
     #open hdf5 file  
     file = h5py.File(filePath, 'r')   # 'r' means that hdf5 file is open in read-only mode
     
@@ -113,7 +115,7 @@ for f in xrange(len(onlyH5files)):
     file.close() 
 
     #write out elements into a list
-    fileExtents=[onlyH5files[f],yTop,yBot,xLeft,xRight,mapInfo,xCent,yCent]  
+    fileExtents=[f,yTop,yBot,xLeft,xRight,mapInfo,xCent,yCent]  
     finalLookup.append(fileExtents)
 
 #%reset clears all variables
@@ -205,6 +207,8 @@ print('plotIdDict - A dictionary of h5 files for each plot is created')
 
 ###################################
 
+### probably should be consistent and use pandas)
+
 import csv
 f = open('inputs/SJERTiles.txt')
 csvRead=csv.reader(f)
@@ -231,7 +235,7 @@ cleanOutDir(plotH5FilePath + '*')
 #create H5 file with spectra for each plot - named with the plot name
 for keys in disDict: 
     #create empty H5 File - this is where all of the plot data will be stored
-    hFile = h5py.File('data/h5/' + keys + '.h5', 'a')  
+    hFile = h5py.File('data/h5/' + keys + '.h5', 'w')  
     #get the flightline that needs to be subsetted
     filePath =(fileDirectory + disDict[keys][1])    
     file = h5py.File(filePath, 'r')   # 'r' means that hdf5 file is open in read-only mode
