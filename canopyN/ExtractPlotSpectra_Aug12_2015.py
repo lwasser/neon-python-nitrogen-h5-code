@@ -10,6 +10,28 @@ a. metadata
 ###############################################
 #set working directory
 import os
+import platform
+
+
+########################## DEFINE PATHS #################################
+#########################################################################
+
+#os.chdir('c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN')
+
+#check to see what platform i'm running on
+if platform.system() == 'Windows':
+    #set basepath for windows
+    basePath='c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN'
+    fileDirectory = (r'G:/D17_Data_2014_Distro/02_SJER/SJER_Spectrometer_Data/2013061320/Reflectance/')
+else:
+    #path to MAC git repo
+    basePath='/Users/lwasser/Documents/GitHub/pythonWork/canopyN'
+    fileDirectory = (r'/Volumes/My Passport/D17_Data_2014_Distro/02_SJER/SJER_Spectrometer_Data/2013061320/Reflectance/')
+    chmPath = (r'/Volumes/My Passport/D17_Data_2014_Distro/02_SJER/SJER_LiDAR_Data/CHM/r_filtered_CHM_pit_free.tif')
+
+os.chdir(basePath)
+os.getcwd()
+
 
 import h5py 
 import numpy as np
@@ -22,22 +44,8 @@ from derivePlotBoundary import derivePlotBoundary
 from processNDVI import processNDVI
 from extractBrightestPixels import findBrightPixels
 
-import platform
 
-########################## DEFINE PATHS #################################
-#########################################################################
 
-os.chdir('c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN')
-
-#check to see what platform i'm running on
-if platform.system() == 'Windows':
-    #set basepath for windows
-    basePath='c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN'
-    fileDirectory = (r'G:/D17_Data_2014_Distro/02_SJER/SJER_Spectrometer_Data/2013061320/Reflectance/')
-else:
-    #path to MAC git repo
-    basePath='/Users/lwasser/Documents/GitHub/pythonWork/canopyN'
-    fileDirectory = (r'/Volumes/My Passport/D17_Data_2014_Distro/02_SJER/SJER_Spectrometer_Data/2013061320/Reflectance/')
 
 #just in case i need to hit sandbox again..
 #fileDirectory = (r'X:/All_data_distro/D17/SJER/2013/SJER_Spectrometer_Data/2013061320/Reflectance')
@@ -58,6 +66,8 @@ NDVItiffpath = basePath+'/data/ndviTiff/'
 CHMtiffpath = basePath+'/data/chmTiff/'
 
 xyPlotLoc  = basePath+ '/fieldData/SJERPlotCentroids.csv'
+
+chmPath = 
 
 #########################################################################
 
@@ -369,11 +379,14 @@ np.savetxt(name, finalSpectra, delimiter=",",fmt='%1.5d')
 ##################### CLIP CHM to Study Region ##############################
 #############################################################################
 clippedCHM={}
+# use chmPath
 
 for plot in plotNamesList:    
     #import chm
-    CHM= (r'G:/D17_Data_2014_Distro/02_SJER/SJER_LiDAR_Data/CHM/r_filtered_CHM_pit_free.tif')  
-    
+    CHM= (r'/Volumes/My Passport/D17_Data_2014_Distro/02_SJER/SJER_LiDAR_Data/CHM/r_filtered_CHM_pit_free.tif')  
+   
+   
+       
     #clipRaster(inputRaster,clipExtent)
     #[leftx, rightx, topy, bottomy]
     #plot vertices was: [left X, Lower Y, right X, Upper Y ]
@@ -400,7 +413,9 @@ for plot in plotNamesList:
 #NDNI = [log(1/R1510)-log (1/R1680)] / [log (1/R1510) + log (1/R1680)])
 
 #create list of plot level H5 files
-briPixH5Path = 'c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/brightPixelsH5/'
+#briPixH5Path = 'c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/data/brightPixelsH5/'
+
+briPixH5Path = plotH5_BrightPixPath
 
 briPixH5Files=geth5FileList(briPixH5Path)
 NDNI={}

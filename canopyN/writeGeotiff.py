@@ -8,8 +8,14 @@ Created on Thu Jan 22 09:42:53 2015
 from osgeo import gdal
 import osr
 import os
+
 #conda install gdal provides the above libraries.
-os.chdir('c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/')
+#conda install -c https://conda.binstar.org/osgeo gdal
+
+#os.chdir('c:/Users/lwasser/Documents/GitHub/pythonWork/canopyN/')
+os.chdir('/Users/lwasser/Documents/GitHub/pythonWork/canopyN')
+os.getcwd()
+
 
 def writeGeotiff (dst_filename,array,upperLeftx,upperLeftY,EPSG=32611,ncol=40,nrow=40):
         '''Create raster from array. This needs to be followed by gdal_translate command to set null value 
