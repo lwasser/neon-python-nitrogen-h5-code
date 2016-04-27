@@ -14,6 +14,8 @@
 # \date 20 Oct 2015
 # \version 1.0
 # \updated 27 April 2016, Leah A Wasser
+# \modified calc of newMapTie point to use the data tie point and calculate via
+# \ pixel "offset" rather than using the polygon extent
 # Use: python subset_aop_h5_file.py --input NIS1_20140601_145336_atmcor.h5 --clip HarvardClipBox.shp --output newfile.h5
 
 import os
@@ -62,20 +64,27 @@ class SubsetAOPh5:
             projectedPolygons = self.__TransformPolygons(-theta, projectedPolygons.copy(), mapTiePoint)
             
         # Get the bounding box of the polygon.
-        boundingBox = self.__GetBoundingBox(projectedPolygons)
-        
+        boundingBoxUTM = self.__GetBoundingBox(projectedPolygons)
+                    
+        # Get the pixel space bounding box.
+        boundingBox = self.__GetPixelBoundingBox(boundingBoxUTM, pixelSize, pixelTiePoint, mapTiePoint)
+
         # [xmin, ymax] is the upper-left point of the raster.  This is the new map tie point.
+        newMapTiePoint = [float('nan'),float('nan')]
+        # calculate NEW x tie point using Original Data tie point as "0,0" reference
+        newMapTiePoint[0] = mapTiePoint[0] + boundingBox[0] * pixelSize[0]
+        # calculate NEW x tie point using Original Data tie point as "0,0" reference
+        newMapTiePoint[1] = mapTiePoint[1] - boundingBox[2] * pixelSize[1]
+
         # Insert this into MapInfo string, which we will write to the new file.
-        newMapTiePoint = [str(boundingBox[0]), str(boundingBox[3])]
+        # newMapTiePoint = [str(boundingBox[0]), str(boundingBox[3])]
         if hasRotation:
             newMapTiePoint = self.__TransformPoint(theta, newMapTiePoint, mapTiePoint)
-            
+
         # Create the new MapInfo string, with the new tie point.
         MapInfo[3:5] = [str(newMapTiePoint[0]), str(newMapTiePoint[1])]
         MapInfo = ','.join(MapInfo)
-        
-        # Get the pixel space bounding box.
-        boundingBox = self.__GetPixelBoundingBox(boundingBox, pixelSize, pixelTiePoint, mapTiePoint)
+
         
         # Determine which datasets to subset.
         rasters, notRasters = self.__GetDatasetKeys(f)
@@ -137,6 +146,24 @@ class SubsetAOPh5:
             newYs.append(newY)
         newBoundingBox[3] = int(round(newYs[0])) # reverse order
         newBoundingBox[2] = int(round(newYs[1]))
+        
+        # check the min and max values; added 4/27
+        # check x min and max values, ensure they are within the index boundaries
+        # of the original data. The clipping polygon extent could fall OUTSIDE of the
+        # data extent.
+        if newBoundingBox[0] < 0:
+            newBoundingBox[0] = 0
+        if newBoundingBox[1] > xyDims[0]:
+            newBoundingBox[1] = xyDims[0]
+            
+        # check the min and max values 
+        # check Y min and max values, ensure they are within the index boundaries
+        if newBoundingBox[2] < 0:
+            newBoundingBox[2] = 0
+        if newBoundingBox[3] > xyDims[1]:
+            newBoundingBox[3] = xyDims[1]
+       
+        # 
         
         return newBoundingBox
     
