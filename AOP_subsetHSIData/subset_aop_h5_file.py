@@ -56,6 +56,10 @@ class SubsetAOPh5:
         pixelSize = [float(i) for i in MapInfo[5:7]]
         pixelTiePoint = [float(i)-1.0 for i in MapInfo[1:3]] #Stored in 1-based pixel locations.  We want 0-based.
         mapTiePoint = [float(i) for i in MapInfo[3:5]]
+        reflectance = f['Reflectance']
+        # grab the dimensions of the matrix  to use in calculating the new tie
+        # point  
+        self.xyDims = reflectance.shape[1:3]
         
         # Check for rotation
         hasRotation = "rotation" in MapInfo[-1]
@@ -148,20 +152,27 @@ class SubsetAOPh5:
         newBoundingBox[2] = int(round(newYs[1]))
         
         # check the min and max values; added 4/27
+        # open reflectance dataset to get x and y shape
+        # reflectance = f['Reflectance']
+        # grab the dimensions of the matrix  to use in calculating the new tie
+        # point  
+        # not sure how this is being stored here - ask greg. i need it to become 
+        # a variable i think? 
+        # xyDims = reflectance.shape[1:3]
         # check x min and max values, ensure they are within the index boundaries
         # of the original data. The clipping polygon extent could fall OUTSIDE of the
         # data extent.
         if newBoundingBox[0] < 0:
             newBoundingBox[0] = 0
-        if newBoundingBox[1] > xyDims[0]:
-            newBoundingBox[1] = xyDims[0]
+        if newBoundingBox[1] > self.xyDims[0]:
+            newBoundingBox[1] = self.xyDims[0]
             
         # check the min and max values 
         # check Y min and max values, ensure they are within the index boundaries
         if newBoundingBox[2] < 0:
             newBoundingBox[2] = 0
-        if newBoundingBox[3] > xyDims[1]:
-            newBoundingBox[3] = xyDims[1]
+        if newBoundingBox[3] > self.xyDims[1]:
+            newBoundingBox[3] = self.xyDims[1]
        
         # 
         

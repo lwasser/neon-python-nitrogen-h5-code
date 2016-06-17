@@ -1,0 +1,5 @@
+
+    
+    /Users/lwasser/Documents/data/1_spectrometerData/Teakettle
+    
+    python subset_aop_h5_file.py --input /Users/lwasser/Documents/data/1_spectrometerData/Teakettle/NIS1_20130614_095740_atmcor.h5 --clip /Users/lwasser/Documents/data/1_spectrometerData/Teakettle/teakettle_clip.shp --output newfile.h5
